@@ -81,3 +81,5 @@ sudo ssh -i /var/snap/multipass/common/data/multipassd/ssh-keys/id_rsa -L 0.0.0.
 ```
 
 完整的script可以參考[initDockerCluster.sh](https://github.com/macauyeah/ubuntuPackerImage/blob/main/initDockerCluster.sh)。
+
+沒有Bare Metal Ubuntu或者沒有static ip也可以參考[initDockerClusterWithoutStaticIp.sh](https://github.com/macauyeah/ubuntuPackerImage/blob/main/initDockerClusterWithoutStaticIp.sh)。只是因為network brandwidth問題，我就不會在每次更新時都測試。
