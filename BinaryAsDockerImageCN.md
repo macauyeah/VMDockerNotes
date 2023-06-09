@@ -1,12 +1,12 @@
-# Encapsulate Command Line Binary as Docker Image
+# 把command line 的程式打包成Docker Image
 
-Usually in docker images, they mainly focus on providing network service. Their image will keep an alive process in some specific port to provide service.
+平時我們用別人的Docker image，都以網絡服務為主，也就是，他們的image通常以常駐，打開某個網絡端口(UDP/TCP Port)提供服務。
 
-But some other images like nodejs, java, they are an time only binary. They can run and return result form command line output.
+但像nodejs, java等，其實是一些command line程式。它們其實可以一次性地執行後，回傳結果。
 
-In this article, we will build an image to provide mdbook binary.
+這次我們就以一個mdbook程式為例子，介紹打包的流程。
 
-First thing first, in docker image to install or compile the binary.
+第一件事，在Docker image中，安裝或編譯binary
 ```
 # Dockerfile
 FROM ubuntu:22.04
@@ -20,7 +20,7 @@ WORKDIR /opt/mdbookdata
 ENTRYPOINT ["mdbook"]
 ```
 
-Build image, give it a tag name, mdbook:beta
+打包成image，給他一個名字，例如mdbook:beta
 ```bash
 sudo docker build -t mdbook:beta ./
 ```

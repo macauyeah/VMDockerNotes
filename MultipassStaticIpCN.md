@@ -4,7 +4,7 @@
 
 另一個問題是官方文件都認為設定固定IP不是Multipass的範圍，它不想講太多。 但根據我的經驗，它的[官方例子](https://multipass.run/docs/configure-static-ips)在Ubuntu Server 22.04並不能用。 (它可能可以在Ubuntu桌面上運行吧，但我不確定。)
 
-以下是我在不論踩坑後找到的解決方案。
+以下是我在不斷踩坑後找到的解決方案。
 
 ## 通過snap安裝Multipass
 簡單，無腦
