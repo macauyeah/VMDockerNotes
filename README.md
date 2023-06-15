@@ -11,4 +11,4 @@ Notes about all of my trails and errors in VM and docker.
 - Docker Cluster with Vmware [中文](VmwareDockerClusterCN.md)
 
 ## Docker
-- Encapsulate Command Line Binary as Docker Image [En](BinaryAsDockerImageEN.md)
+- Encapsulate Command Line Binary as Docker Image [EN](BinaryAsDockerImageEN.md), [中文](BinaryAsDockerImageCN.md)
