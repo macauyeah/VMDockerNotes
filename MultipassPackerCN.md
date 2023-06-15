@@ -15,8 +15,14 @@
 醜話說在前頭。經過一輪測試，multipass最大的問題，就是custom image、fix IP都只能在bare metal ubuntu 中才能使用。如果你沒有一台閒置實體機安裝Ubuntu，還是不要隨便試。
 
 ## 重點
-詳細的流程，筆者記錄了在[Packer template](https://github.com/macauyeah/ubuntuPackerImage) 和[Multipass Static IP](MultipassStaticIpCN.md)中，在這裏就只說一些重點。
+詳細的Proof of Concept，筆者記錄了在
+- [Packer template git repo link](https://github.com/macauyeah/ubuntuPackerImage) 
+	- [Packer template.json link](https://github.com/macauyeah/ubuntuPackerImage/blob/main/template.json)
+	- [Multipass run packer image script link](https://github.com/macauyeah/ubuntuPackerImage/blob/main/initDockerCluster.sh)
+- [Multipass Static IP script snippet](MultipassStaticIpCN.md)
+	- 筆者已經沒有多餘的bare metal ubuntu，沒法不斷重複測試這個安裝步驟。
 
+在這裏就補充一些重點。
 - packer是使用cloud-init和qemu的技術，行起template中指定的cloud image (在筆者的例子中就是ubuntu-22.04-server-cloudimg-amd64.img)
 - 大家可以定義image行起後進行一些操作，而那些操作都是經過qemu vnc、ssh進去操作的。
 - 操作完後就會直接儲存當時的image。所以在操作結束之前，盡可能地刪cache或刪去不要的user / group settings。
@@ -28,6 +34,6 @@
 - multipass也可以設定不同的cloud-init參數。
 
 ## 成品
-最後筆者就選擇了用packer用來預裝docker，經mulitpass無腦起VM，再使用shell script對多個node設定docker，達到即時起docker node的功能。這樣就減省了VM的安裝時間，也省去了docker的安裝問題。
+最後筆者就選擇了用packer用來預裝docker，經mulitpass無腦起VM，再使用 [shell script](https://github.com/macauyeah/ubuntuPackerImage/blob/main/initDockerCluster.sh) 對多個node設定docker，達到即時起docker node的功能。這樣就減省了VM的安裝時間，也省去了docker的安裝問題。
 
 說到底，如果只想測試docker cluster，其實windows, macOS中的multipass也可以實現相同的功能。因為安裝docker那些都可以經過shell script自動化，只是每次重複操作，都變得相當慢。另外，因為multipass在windows, macOS不支援fix ip，對於指定docker cluster interface又會再多一重功夫。

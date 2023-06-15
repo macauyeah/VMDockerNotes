@@ -25,27 +25,26 @@ ENTRYPOINT ["mdbook"]
 sudo docker build -t mdbook:beta ./
 ```
 
-In the Dockerfile, I choose to use ***ENTRYPOINT*** and in ***exec*** form, because I want to append mdbook argument through ***docker run***
+在Dockerfile中，我選擇使用 ***ENTRYPOINT*** 的 ***exec*** 格式，因為我需要後期在 ***docker run*** 動態加入參數。
 
-For example, passing ***--version*** to container, so that mdbook could get the argument.
+例如，要把參數 ***--version*** 傳入container，讓mdbook就可以看到該參數。
 ```bash
 sudo docker run --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta --version
 ```
 
-But in the base docker image, it run as root. If you build a book by image, the ***book/*** output folder's ownership will be set to root. You could change the default ownership by add ```--user $(id -u):$(id -g)```
-
+但在docker image中，它是使用root來執行。如果你直接執行build，那麼它的輸出資料夾 ***book/*** 的擁有人就會變成了root。你要用指定 ***--user $(id -u):$(id -g)***來指定執行者。
 ```bash
 sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta
 ```
 
-And also, if you want to make an cammand alias in your bash shell, so that you no need to run a long command very time, you could add a line in ```~/.bashrc```.
+還有，如果不想每次都打這麼長的指令，你可以在 ***~/.bashrc*** 中做別名(alias)。
 
 ```bash
 # edit ~/.bashrc
 alias mdbook='sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta $1'
 ```
 
-Then you can call it from your host by
+這樣就可以簡化執行指令。
 ```bash
 # let .bashrc take effect without logout login
 source ~/.bashrc
