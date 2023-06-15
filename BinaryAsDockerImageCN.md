@@ -32,9 +32,9 @@ sudo docker build -t mdbook:beta ./
 sudo docker run --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta --version
 ```
 
-但在docker image中，它是使用root來執行。如果你直接執行build，那麼它的輸出資料夾 ***book/*** 的擁有人就會變成了root。你要用指定 ***--user $(id -u):$(id -g)***來指定執行者。
+但在docker image中，它是使用root來執行。如果你直接執行build，那麼它的輸出資料夾 ***book/*** 的擁有人就會變成了root。你要用指定 ***--user $(id -u):$(id -g)*** 來指定執行者。
 ```bash
-sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta
+sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta build
 ```
 
 還有，如果不想每次都打這麼長的指令，你可以在 ***~/.bashrc*** 中做別名(alias)。

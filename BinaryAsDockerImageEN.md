@@ -35,7 +35,7 @@ sudo docker run --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta --version
 But in the base docker image, it run as root. If you build a book by image, the ***book/*** output folder's ownership will be set to root. You could change the default ownership by add ```--user $(id -u):$(id -g)```
 
 ```bash
-sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta
+sudo docker run --user $(id -u):$(id -g) --rm -it -v $(pwd):/opt/mdbookdata mdbook:beta build
 ```
 
 And also, if you want to make an cammand alias in your bash shell, so that you no need to run a long command very time, you could add a line in ```~/.bashrc```.
