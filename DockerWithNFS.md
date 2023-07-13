@@ -33,13 +33,15 @@ volumes:
 	- 但在windows / mac下，因應docker 底層建立Linux VM的技術不同，你可能沒法在windows / mac預設環境下直接讀取docker named volume。
 	- 若要讀取docker named volume，最好的做法，還是連上docker container，然後用docker cp 來抄回資料。一但抄資料，其實都會有速度上問題，不過docker cp是手動決定何時做的，不做docker cp，其實container也是可以用。
 
-## Cluster-儲存空間
+## Cluster (Docker Swarm) - 儲存空間
 雖然良心的bind mount和named volume解決了單機上的儲存問題，但到了cluster環境，就沒有可以跨機同步儲存空間的做法，要做就自己建立。
 
 筆者也稍為研究了一下同步的問題，不過對技術真的很有要求。所以退而求其次，筆者還是選擇簡單的第三方儲存空間。就是做一個可以分享存取的NAS。
 
 ### 建立nfs
-linux下要安裝nfs其實很簡單，不過要注意資料夾和防火牆權限，記得把下面的YOUR_DOCKER_NODE_ADDRESS_RANGE轉為你的真實IP段落
+linux下要安裝nfs其實很簡單，不過要注意資料夾和防火牆權限。
+
+以下安裝教學以ubunut 22.04為例，記得把下面的YOUR_DOCKER_NODE_ADDRESS_RANGE轉為你的真實IP段落
 ```
 apt update && apt install nfs-kernel-server ufw -y
 
