@@ -8,7 +8,7 @@ Docker Swarm Mode其實是Docker提供的一個Cluster(群集)環境。在其中
 只要該Image跑起的Container是Stateless(前後兩次執行的結果互不相干涉)，或者是把Stateful的部份(有干涉的部份)外包到第三方(例如儲存空間使用NFS，或記憶體暫存改為Key-Value Database)，就可以方便地運作在Docker Swarm mode上。
 
 # 部署Docker Swarm的選項
-Docker Swarm可以把Image變成分身Container，但並不沒有硬性改變傳統App操作方式。大部份App在執行時，都需要另一個底層程式的支緩。例如
+Docker Swarm可以把Image變成分身Container，但並沒有硬性改變傳統App操作方式。大部份App在執行時，都需要另一個底層程式的支緩。例如
 - Php Web App，需要底層php fpm + nginx或apache
 - Java Web App，就需要java + Tomcat
 
