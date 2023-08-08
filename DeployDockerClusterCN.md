@@ -1,4 +1,4 @@
-# Deploy image vs binary
+# 把App轉成Swarm mode 還是把底層程式變成Swarm mode?
 
 雖然筆者對於Docker Swarm Mode的資歷尚淺，但由於後期更動的難點越來越多，筆者很想早一點討論其中不同操作的差異
 
