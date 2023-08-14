@@ -71,10 +71,10 @@ maven-deploy:
     # ${ID_RSA} is a rsa private key file location, it can skip password input during ssh or scp operation. 
     # you need to pre-config production serevr auth before exec this script
     - "chmod og= ${ID_RSA}"
-	- "scp -i ${ID_RSA} -o StrictHostKeyChecking=no app.war YOUR_ACCOUNT@PRODUCTION_SERVER_1:./"
-	- "ssh -i ${ID_RSA} -o StrictHostKeyChecking=no YOUR_ACCOUNT@PRODUCTION_SERVER_1 UPDATE_COMMAND"
-	- "scp -i ${ID_RSA} -o StrictHostKeyChecking=no app.war YOUR_ACCOUNT@PRODUCTION_SERVER_2:./"
-	- "ssh -i ${ID_RSA} -o StrictHostKeyChecking=no YOUR_ACCOUNT@PRODUCTION_SERVER_2 UPDATE_COMMAND"
+    - "scp -i ${ID_RSA} -o StrictHostKeyChecking=no app.war YOUR_ACCOUNT@PRODUCTION_SERVER_1:./"
+    - "ssh -i ${ID_RSA} -o StrictHostKeyChecking=no YOUR_ACCOUNT@PRODUCTION_SERVER_1 UPDATE_COMMAND"
+    - "scp -i ${ID_RSA} -o StrictHostKeyChecking=no app.war YOUR_ACCOUNT@PRODUCTION_SERVER_2:./"
+    - "ssh -i ${ID_RSA} -o StrictHostKeyChecking=no YOUR_ACCOUNT@PRODUCTION_SERVER_2 UPDATE_COMMAND"
 ```
 
 這裏有些隱藏的管理成本，如果你生產環境中有多個node，最後那幾行指令就要多抄幾次。
@@ -98,7 +98,7 @@ stages:
 docker-deploy:
   stage: deploy
   script:
-  	- "mvn clean compile package -Pprod -Dmaven.test.skip=true"
+    - "mvn clean compile package -Pprod -Dmaven.test.skip=true"
     - "docker image build -t YOUR_IMAGE_PRIVATE_REPO ./"
     - "docker image push YOUR_IMAGE_PRIVATE_REPO"
     # ${ID_RSA} is a rsa private key file location, it can skip password input during ssh or scp operation. 
