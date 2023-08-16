@@ -41,8 +41,10 @@ sudo nmcli connection add type bridge con-name localbr ifname localbr \
 
 ## 將Multipass切換到lxd
 Multipass網絡功能目前只在***lxd***後端上提供。
-```
+```bash
 sudo snap start multipass.multipassd
+# 在轉driver前，先刪掉所有VM。轉了之後就無法管控之前的VM
+multipass delete --all && multipass purge
 multipass set local.driver=lxd
 ```
 
@@ -50,7 +52,11 @@ multipass set local.driver=lxd
 
 ## 在VM中創建額外的網卡
 在創建新的VM實例時創建額外的網卡。
-```
+```bash
+# 建立新VM時指定它的網卡和mac地址
+multipass launch --name test1 --network name=localbr,mode=manual,mac="52:54:00:4b:ab:cd"
+
+# 修改設定檔，對應mac地址使用固定IP
 multipass exec -n test1 -- sudo bash -c 'cat << EOF > /etc/netplan/10-custom.yaml
 network:
     version: 2
@@ -61,12 +67,10 @@ network:
                 macaddress: "52:54:00:4b:ab:cd"
             addresses: [10.13.31.13/24]
 EOF'
-```
-重啟VM實例網絡。
-```
+
+# 重啟VM實例網絡。
 multipass exec -n test1 -- sudo netplan apply
-```
-然後，您應該在VM上看到固定IP列表。
-```
+
+# 然後，您應該在VM上看到固定IP列表。
 multipass info test1
 ```

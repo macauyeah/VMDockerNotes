@@ -41,8 +41,10 @@ The new interface should appear now (but down) if you check by ```ip a```.
 
 ## Switch Multipass to lxd
 Multipass networks feature currently are only available on ***lxd*** backend.
-```
+```bash
 sudo snap start multipass.multipassd
+# delete everything before switch to other driver. You cannot manage them after switching driver
+multipass delete --all && multipass purge
 multipass set local.driver=lxd
 ```
 
@@ -50,7 +52,11 @@ Following commands are all same as official document.
 
 ## Create Extra interface in VM
 Create extra interface when creating new new VM instance.
-```
+```bash
+# creatre new instance with specific network interface and mac address
+multipass launch --name test1 --network name=localbr,mode=manual,mac="52:54:00:4b:ab:cd"
+
+# map mac address with fix ip
 multipass exec -n test1 -- sudo bash -c 'cat << EOF > /etc/netplan/10-custom.yaml
 network:
     version: 2
@@ -61,12 +67,10 @@ network:
                 macaddress: "52:54:00:4b:ab:cd"
             addresses: [10.13.31.13/24]
 EOF'
-```
-Restart VM instance networks.
-```
+
+# Restart VM instance networks.
 multipass exec -n test1 -- sudo netplan apply
-```
-And you should see the fix ip list on VM 
-```
+
+# And you should see the fix ip list on VM 
 multipass info test1
 ```
