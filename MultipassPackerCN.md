@@ -3,24 +3,38 @@
 ## 前言
 原本筆者只是想做docker cluster，但因為在實機中建VM極其麻煩，所以就研究了好一陣子如何快速起VM。
 
-- Hyper-V有預設的Ubuntu template，但只有ubuntu desktop版，沒有server版。而且desktop gui顯得浪費資源，要clone VM也很廢時，放棄。
-- Windows Subsystem Linux起VM很方便，但同一個Linux version只有一個instance，沒法起cluster，放棄。
-- Virtual box沒有Ubuntu template，若要clone的話就變得跟Hyper-V差不多，放棄。
+以下是筆者有初步研究，但未有完全實行的方向。
+- Hyper-V
+	- 有預設的Ubuntu template，但只有ubuntu desktop版，沒有server版。Desktop gui顯得浪費資源
+	- clone VM很費時，需要通過Export，Import達到Clone效果。(2023-08-17 更新:若好好地處理各VM的HDD存放位置，Export，Import也不錯)
+	- 而且沒有自帶的cloud-init，需要自己想辦法做一些Clone後置的處理。
+	- 若要走cloud image + cloud-init，可能需要[Windows ADK](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install)，並配合qemu做轉換。
+- Windows Subsystem Linux
+	- 起VM很方便，但同一個Linux version只有一個instance
+	- 可能需要需要通過Export，Import Instance來達到Clone效果
+	- 可能沒有fix ip。可能對於起docker swarm不利。
+- Virtual box
+	- 沒有Ubuntu template
+	- 若要clone的話就變得跟Hyper-V差不多。
 
 經過一輪資料搜集，發現了一個Ubuntu multipass engine，聲稱可以跨平台快速起VM。裏面有一些很吸引的功能，可以自己建立images、使用固定IP。
 
 那怕即使是沒有snapshot，在自定義images的配合下預裝docker，要隨時加減cluster node都是一件容易的事。
 
-## 重大問題
-醜話說在前頭。經過一輪測試，multipass最大的問題，就是custom image、fix IP都只能在bare metal ubuntu 中才能使用。如果你沒有一台閒置實體機安裝Ubuntu，還是不要隨便試。
+# Ubuntu multipass
+## 參考軟硬件需求
+醜話說在前頭。經過一輪測試，multipass最大的問題，就是custom image、fix IP都只能在ubuntu中才能使用。以下是筆者成功實現的軟硬件架構。
+- 你可以使用實體主機，BIOS提供Virtualization，在實機上安裝Ubuntu，最後行起multipass。
+  - 參考配置: 實機:CPU 10 core, 32G RAM, 1T HDD
+- 你可以使用實機主機，BIOS提供Virtualization，在實機上安裝Windows 10 和Hyper-V，並在Hyper-V上安裝ubuntu，並對該Ubuntu提供ExposeVirtualizationExtensions。
+  - 參考配置: 實機:CPU 10 core, 32G RAM, 1T HDD；VM Ubuntu: CPU 4 core，10G RAM，128G HDD
 
 ## 重點
 詳細的Proof of Concept，筆者記錄了在
 - [Packer template git repo link](https://github.com/macauyeah/ubuntuPackerImage) 
-	- [Packer template.json link](https://github.com/macauyeah/ubuntuPackerImage/blob/main/template.json)
+	- [Packer template.pkr.hcl link](https://github.com/macauyeah/ubuntuPackerImage/blob/main/template.pkr.hcl)
 	- [Multipass run packer image script link](https://github.com/macauyeah/ubuntuPackerImage/blob/main/initDockerCluster.sh)
 - [Multipass Static IP script snippet](MultipassStaticIpCN.md)
-	- 筆者已經沒有多餘的bare metal ubuntu，沒法不斷重複測試這個安裝步驟。
 
 在這裏就補充一些重點。
 - packer是使用cloud-init和qemu的技術，行起template中指定的cloud image (在筆者的例子中就是ubuntu-22.04-server-cloudimg-amd64.img)
@@ -30,7 +44,7 @@
 - cloud-init是用來指定初次運行時要設定的事，例如:hdd size, user account password, ssh key import等。
 - 使用工具cloud-localds可以生成一個seed.img，這樣qemu也可以cloud-init。
 - Hyper-V應該也可以經過類似方式，進行cloud-init，但筆者未有去實測。如有更簡便的方法請告知。
-- multipass預設就已經有cloud-init，在bare metal ubuntu就可以直接執行。
+- multipass預設就已經有cloud-init，在ubuntu就可以直接執行。
 - multipass也可以設定不同的cloud-init參數。
 
 ## 成品
