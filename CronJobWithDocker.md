@@ -46,12 +46,45 @@ timeout 2m ping localhost
 # in file /opt/run.sh
 timeout 2m ping localhost
 exitCode=$?
-if [[ exitCode -eq 124 ]] then
+if [[ $exitCode -eq 124 ]]; then
     echo "timeout"
     # enter email alert with timeout
-elif [[ exitCode -gt 0 ]] then
+elif [[ $exitCode -gt 0 ]]; then
     echo "exit with error"
     # enter email alert with timeout
+else
+    echo "exit normal"
 fi
 ```
 
+配合docker使用，你可能需要考慮signal怎樣傳遞。
+
+在筆者測試的環境中，似乎SIGTERM會被擋，也有可能是SIGTERM太強，它只把前景的docker container run收走，但其內的ping process還在docker daemon中行走。所以最後改用SIGINT，讓docker container run可以好好地把SIGINT傳入其內。
+```
+# It seems that docker captured the SIGTERM. Send SIGINT instead
+
+# in file /opt/run.sh
+timeout --signal=SIGINT 10s docker container run --rm pingtest -c 20
+exitCode=$?
+if [[ $exitCode -eq 124 ]]; then
+    echo "timeout"
+    # enter email alert with timeout
+elif [[ $exitCode -gt 0 ]]; then
+    echo "exit with error"
+    # enter email alert with timeout
+else
+    echo "exit normal"
+fi
+```
+
+還有一個常見的問題，就是中間夾雜了sudo，這樣前面的signal也是傳不過去，都被sudo擋了。所以只能把整段script都變成sudo或直接使用root執行；又或者把你的user加入docker group，執行docker command時就不用sudo。
+```
+# not work if wrapped sudo inside
+timeout -signal=SIGINT 10s sudo docker container run --rm pingtest -c 20
+timeout 10s sudo docker container run --rm pingtest -c 20
+
+# workaround, add sudo outside of the whole script;
+sudo /opt/run.sh
+```
+
+Full demo, github repo [cronjobWithDocker](https://github.com/macauyeah/cronjobWithDocker.git)
