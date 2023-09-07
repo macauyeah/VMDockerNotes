@@ -48,10 +48,10 @@ timeout 2m ping localhost
 exitCode=$?
 if [[ $exitCode -eq 124 ]]; then
     echo "timeout"
-    # enter email alert with timeout
+    # send email alert with timeout
 elif [[ $exitCode -gt 0 ]]; then
     echo "exit with error"
-    # enter email alert with timeout
+    # send email alert with error exit
 else
     echo "exit normal"
 fi
@@ -68,10 +68,10 @@ timeout --signal=SIGINT 10s docker container run --rm pingtest -c 20
 exitCode=$?
 if [[ $exitCode -eq 124 ]]; then
     echo "timeout"
-    # enter email alert with timeout
+    # send email alert with timeout
 elif [[ $exitCode -gt 0 ]]; then
     echo "exit with error"
-    # enter email alert with timeout
+    # send email alert with error exit
 else
     echo "exit normal"
 fi
