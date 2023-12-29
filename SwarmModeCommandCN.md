@@ -76,9 +76,6 @@ $ docker network connect --alias gateway nginx_c_gateway nginx_c5
 
 類似地，docker service也不能單獨地停掉分身，頂多只能調整```--replicas=NUMBER```，來控制分身數量。而單機則可以經過```docker container stop```來暫停分身。
 
-## Docker Service Rollback
-待補完
-
 ## Docker Stack
 同樣地，在單機管理container時，可以通過內建的docker compose指令配搭docker-compose.yaml檔案，管理多個有協作關係的container。Swarm mode也可以通過docker stack去管理yaml檔案中的多個有協作關係的service。
 
@@ -95,3 +92,6 @@ docker compose down
 docker stack也跟docker service類似，沒有隨時叫停的功能，而docker compose 就可以暫時叫停分身```docker compose -f setting.yaml stop```。
 
 yaml例子待補完
+
+## Docker Service Rollback
+詳見[SwarmModeRollback.md](SwarmModeRollback.md)

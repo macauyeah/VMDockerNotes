@@ -7,7 +7,9 @@ Notes about all of my trails and errors in VM and docker.
 ## Docker
 - Docker Concept 101 [中文](DockerConcept101CN.md)
 - Build Command Line Application Docker Image [EN](BinaryAsDockerImageEN.md), [中文](BinaryAsDockerImageCN.md)
-- Docker Swarm Mode Command [中文](SwarmModeCommandCN.md)
+- Docker Swarm on Production 1 [中文](SwarmModeCommandCN.md)
+- Docker Swarm on Production 2 [中文](SwarmModeUndeployLeaveCN.md)
+- Docker Swarm on Production 3 [中文](SwarmModeRollbackCN.md)
 - Deploy Docker Cluster [中文](DeployDockerClusterCN.md)
 - Schedule Job with Docker [中文](CronJobWithDockerCN.md)
 - Oracle Database in Docker [中文](OracleCN.md)
