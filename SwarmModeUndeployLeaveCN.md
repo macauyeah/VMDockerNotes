@@ -13,16 +13,20 @@
 ```bash
 # delete stack and leave swarm in node 3, node 2, node 1
 # don't shutdown docker in node 2,3 if node 1 is not available
-docker volume ls
-docker volume rm YOUR_STACK_VOLUME
+docker stack ls
+docker stack rm YOUR_STACK_NAME
 
+# to be confirm if any dingling network, service is still there.
+# not sure how stack handling re-deploy problem when something removed from yaml file
 docker network ls
 docker network rm YOUR_STACK_NETWORK
 
 docker service ls
 docker service rm YOUR_STACK_SERVICE
 
-docker stack rm YOUR_STACK_NAME
+docker volume ls
+docker volume rm YOUR_STACK_VOLUME
+
 docker swarm leave --force
 
 ## begin host changes
