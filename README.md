@@ -20,4 +20,4 @@ Notes about all of my trails and errors in VM and docker.
 - Docker Swarm in Multipass [EN](MultipassDockerClusterEN.md), [中文](MultipassDockerClusterCN.md)
 - Docker Swarm in Vmware [中文](VmwareDockerClusterCN.md)
 - Docker with NFS file store [中文](DockerWithNfsCN.md)
-- Docker with Syslog [EN](DockerSyslogEN.md), [CN](DockerSyslogCN.md)
+- Docker with Syslog [EN](DockerSyslogEN.md), [中文](DockerSyslogCN.md)
