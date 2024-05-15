@@ -61,4 +61,18 @@ cd passt/
 make
 # will show
 # <stdin>:1:10: fatal error: asm-generic/unistd.h: No such file or directory
+
+# download pre build binary directly
+# curl https://passt.top/builds/latest/x86_64/passt -o passt
+# curl https://passt.top/builds/latest/x86_64/passt.1 -o passt.1
+# curl https://passt.top/builds/latest/x86_64/passt.avx2 -o passt.avx2
+curl https://passt.top/builds/latest/x86_64/pasta -o pasta
+# curl https://passt.top/builds/latest/x86_64/pasta.1 -o pasta.1
+# curl https://passt.top/builds/latest/x86_64/pasta.avx2 -o pasta.avx2
+export PATH=$PATH:$(pwd)
+
+chmod u+x pasta
+# but running podman image still fail, ex
+# podman run --name basic_httpd -dt -p 8080:80/tcp docker.io/nginx
+# Error: OCI runtime error: crun: unknown version specified
 ```
