@@ -42,37 +42,35 @@ sudo usermod --add-subuid 100000-165535 --add-subgid 100000-165535 $USER
 podman container run --name ubuntu2204 -it ubuntu:22.04 bash
 ```
 
-## install pasta draft
-it seems after steam os 3.5.19, podman dependency package "pasta" is removed. neither reinstall by pacman or build from source. in-case steam os will break the package again, i try to build myself (but still missing c library)
-
-```
-~/.bashrc
-alias cc="gcc-14"
-alias CC="gcc-14"
-```
+## install pasta
+It seems after upgrading podman to 5.0.x, podman need a dependency "pasta". neither install by pacman or build from source. In-case steam os will break the package, I download the binary directly. (I tried to build from source but need a lot of c library which not avaliable from steam os.)
 
 ```bash
-brew install make
-git clone https://passt.top/passt
-cd passt/
-# add CC reference at top of Makefile
-# CC := /home/linuxbrew/.linuxbrew/bin/gcc-14
-# CC := /home/linuxbrew/.linuxbrew/bin/cc65
-make
-# will show
-# <stdin>:1:10: fatal error: asm-generic/unistd.h: No such file or directory
-
-# download pre build binary directly
-# curl https://passt.top/builds/latest/x86_64/passt -o passt
-# curl https://passt.top/builds/latest/x86_64/passt.1 -o passt.1
-# curl https://passt.top/builds/latest/x86_64/passt.avx2 -o passt.avx2
 curl https://passt.top/builds/latest/x86_64/pasta -o pasta
-# curl https://passt.top/builds/latest/x86_64/pasta.1 -o pasta.1
-# curl https://passt.top/builds/latest/x86_64/pasta.avx2 -o pasta.avx2
-export PATH=$PATH:$(pwd)
-
 chmod u+x pasta
-# but running podman image still fail, ex
-# podman run --name basic_httpd -dt -p 8080:80/tcp docker.io/nginx
+# update PATH variable in current session or add in ~/.bashrc
+export PATH=$PATH:$(pwd)
+```
+
+## change oci runtime
+After adding pasta, running podman 5.0.x still fail. podman complaint 'crun' version is wrong. Becuase two verions of 'crun' in the machine, one from steam os /usr/bin/crun, one from brew.
+```bash
+podman run --name basic_httpd -dt -p 8080:80/tcp docker.io/nginx
 # Error: OCI runtime error: crun: unknown version specified
+```
+
+need to point podman oci runtime to brew crun. (or any crun version higher than 1.14.x)
+
+```bash
+mkdir -p ~/.config/containers/
+cp /usr/share/containers/containers.conf ~/.config/containers/
+```
+
+add brew crun path to section ```[engine.runtimes]``` like below
+```conf
+# vim ~/.config/containers/containers.conf
+[engine.runtimes]
+crun = [
+  "/home/linuxbrew/.linuxbrew/bin/crun"
+]
 ```
