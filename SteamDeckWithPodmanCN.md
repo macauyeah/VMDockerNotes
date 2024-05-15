@@ -41,3 +41,24 @@ sudo usermod --add-subuid 100000-165535 --add-subgid 100000-165535 $USER
 ```bash
 podman container run --name ubuntu2204 -it ubuntu:22.04 bash
 ```
+
+## install pasta draft
+it seems after steam os 3.5.19, podman dependency package "pasta" is removed. neither reinstall by pacman or build from source. in-case steam os will break the package again, i try to build myself (but still missing c library)
+
+```
+~/.bashrc
+alias cc="gcc-14"
+alias CC="gcc-14"
+```
+
+```bash
+brew install make
+git clone https://passt.top/passt
+cd passt/
+# add CC reference at top of Makefile
+# CC := /home/linuxbrew/.linuxbrew/bin/gcc-14
+# CC := /home/linuxbrew/.linuxbrew/bin/cc65
+make
+# will show
+# <stdin>:1:10: fatal error: asm-generic/unistd.h: No such file or directory
+```
