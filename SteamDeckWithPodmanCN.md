@@ -43,7 +43,9 @@ podman container run --name ubuntu2204 -it ubuntu:22.04 bash
 ```
 
 ## install pasta
-It seems after upgrading podman to 5.0.x, podman need a dependency "pasta". neither install by pacman or build from source. In-case steam os will break the package, I download the binary directly. (I tried to build from source but need a lot of c library which not avaliable from steam os.)
+似乎在 podman 升級到 5.0.x 之後，需要一個名為 "pasta" 的依賴套件。這個套件要麼透過 pacman 安裝或從原始碼進行編譯。但為了避免 Steam OS 在更新時會破壞套件，我選擇了直接下載了它的二進位檔案。（我嘗試從原始碼編譯，但許多C 函式庫在 Steam OS 上無法取得的，最後只能直接下載官方的二進位檔。）
+
+It seems after upgrading podman to 5.0.x, podman need a dependency "pasta". Either install by pacman or build from source. In-case steam os will break the package later, I download the binary directly. (I tried to build from source but a lot of c library missing from steam os. That's why I download the binary direclty form official website)
 
 ```bash
 curl https://passt.top/builds/latest/x86_64/pasta -o pasta
@@ -53,18 +55,24 @@ export PATH=$PATH:$(pwd)
 ```
 
 ## change oci runtime
+在添加了 pasta 之後，運行 podman 5.0.x 仍然失敗。podman 會抱怨 'crun' 的版本不正確。這是由於機器上存在兩個版本的 'crun'，一個來自 Steam OS 的 /usr/bin/crun，一個來自 brew。
+
 After adding pasta, running podman 5.0.x still fail. podman complaint 'crun' version is wrong. Becuase two verions of 'crun' in the machine, one from steam os /usr/bin/crun, one from brew.
 ```bash
 podman run --name basic_httpd -dt -p 8080:80/tcp docker.io/nginx
 # Error: OCI runtime error: crun: unknown version specified
 ```
 
-need to point podman oci runtime to brew crun. (or any crun version higher than 1.14.x)
+為解決這個問題，我們需要修改 podman 的設定，讓它的 oci runtime指向 brew 資料夾。（或者任何一個你行找回來的版本，版本最底要求為1.14.x以上，crun於brew 的版本為1.15)
+
+To solove the problem, need to config podman oci runtime to brew folder. (or any crun path with version higher than 1.14.x, version of crun in brew is 1.15)
 
 ```bash
 mkdir -p ~/.config/containers/
 cp /usr/share/containers/containers.conf ~/.config/containers/
 ```
+
+如下，在```[engine.runtimes]```底下加入 brew crun path
 
 add brew crun path to section ```[engine.runtimes]``` like below
 ```conf
