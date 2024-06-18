@@ -49,7 +49,10 @@ It seems after upgrading podman to 5.0.x, podman need a dependency "pasta". Eith
 
 ```bash
 curl https://passt.top/builds/latest/x86_64/pasta -o pasta
+ 
 chmod u+x pasta
+# chmod a+x pasta, if pasta's owned by root. let it share exec permission for everyone.
+
 # update PATH variable in current session or add in ~/.bashrc
 export PATH=$PATH:$(pwd)
 ```
