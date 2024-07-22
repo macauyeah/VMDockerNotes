@@ -1,4 +1,4 @@
-# Swarm mode 上線 4
+# Swarm mode 上線 4 | IP 設定
 
 ## 單機模式 IP設定
 平常我們自己做測試，網絡功能通常用預設的就好。但當我們的Docker Container需要存取在區域網內的其他資源，避晚IP網段相衝是必需要的事。

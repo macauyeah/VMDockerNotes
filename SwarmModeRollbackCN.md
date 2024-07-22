@@ -1,4 +1,4 @@
-# Swarm mode 上線 - 3 | Rollback
+# Swarm mode 上線 - 3 | Rollback 回滾
 Docker Swarm提供了一個很方便的rollback功能。針對swarm service的config都可以用。官方提供了一些[rollback config](https://docs.docker.com/engine/reference/commandline/service_rollback/)的例子。
 
 今天筆者今天就來個自己更常見的例子，rollback image
