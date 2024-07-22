@@ -6,7 +6,7 @@ swarm mode 主要通過"docker service" 指令去產生一堆可以在不同節�
 
 ```docker service create```跟```docker container run```的感覺很像，兩者都可以指定image 
 
-```
+```bash
 # swarm mode
 $ docker swarm init
 $ docker service create --name nginx_s nginx
@@ -16,7 +16,7 @@ $ docker container run -d --name nginx_c nginx
 ```
 
 兩者的差別在於docker service 可以指定多少個分身，可以隨時加減數目，而且如果你有多過一台機器，分身就會在不同的機器上遊走。而docker container就是只對本機有操作，也不會散播到其他機器。
-```
+```bash
 # swarm mode
 $ docker service create --replicas=2 --name nginx_s nginx
 $ docker service ls
