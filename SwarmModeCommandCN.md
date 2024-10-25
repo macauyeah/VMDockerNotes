@@ -91,7 +91,36 @@ docker compose down
 
 docker stack也跟docker service類似，沒有隨時叫停的功能，而docker compose 就可以暫時叫停分身```docker compose -f setting.yaml stop```。
 
-yaml例子待補完
+### Docker Stack yaml
+以下就是一個可以重複文章前述 nginx service 的 yaml 檔範例，它跟原本的 compose 的格式差不多，但多了 deploy 的分支。以 yaml 的方式來編寫，可以更直觀地看出部署的更新設定，例如滾動更新，主機限制等。
+```yaml
+services:
+  s:
+    image: nginx
+    # ports:
+    #   - 80:80
+    deploy:
+      replicas: 5
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role==manager
+```
+
+如同 docker compose 一樣，它會自動偵測設定檔有沒有更新，而決定是否要更新 container 。即使有多個 service，它也會只更新有加入或變動的部份。指令如下
+```bash
+docker stack deploy -c setting.yaml nginx
+```
+
+但它也跟 docker compose 一樣， yaml 檔中有東西消失了，對應該service 就會變成孤兒。孤兒 service 還會運行，而且不會被刪除。除非我們執行刪除指令
+```bash
+docker service rm SERVICE_NAME
+# 或者刪除整個 stack 
+docker service rm STACK_NAME
+```
 
 ## Docker Service Rollback
 詳見[SwarmModeRollback.md](SwarmModeRollbackCN.md)

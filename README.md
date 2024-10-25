@@ -10,6 +10,8 @@ Notes about all of my trails and errors in VM and docker.
 - Docker Swarm on Production 1 [中文](SwarmModeCommandCN.md)
 - Docker Swarm on Production 2 [中文](SwarmModeUndeployLeaveCN.md)
 - Docker Swarm on Production 3 [中文](SwarmModeRollbackCN.md)
+- Swarm mode 上線 4 | IP 設定 [中文](SwarmModeCommandCN.md)
+- Swarm mode 上線 5 - load balancer | 負載平衡器 [中文](SwarmModeLoadBalancer.md)
 - Deploy Docker Cluster [中文](DeployDockerClusterCN.md)
 - Schedule Job with Docker [中文](CronJobWithDockerCN.md)
 - Oracle Database in Docker [中文](OracleCN.md)
