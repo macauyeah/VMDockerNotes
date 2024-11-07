@@ -78,9 +78,25 @@ systemctl restart keepalived
 
 # draft
 ## virtual host load balance
-以下就是一個最簡單的例子，最前端的 http-gateway 對外公開端口 8080 ，它根據 virtual host，去分派對應的請求去 dmzhttp 及 managerhttp。
+前面的例子，我們已經成功設定 ingress Network，也加了 virtual ip 。如果大家的目標是單一 web 應用，應該就已經很足夠。但作為一個足夠節儉的老闆，怎會讓一個 Swarm 只跑一個 Web 應用？但問題來了，一個 docker swarm service 就已經佔用一個公開端口 (例如上述的8888，或是更常見的443)。怎麼可以做到多個 service 分享同一個端口？答案就是回到傳統的 Web Server 當中，使用它們的 virtual host 及 proxy 功能，以達到這一效果。我們就以 Nginx 為例，去建立一個守門口的網關。
 
-all in one
+以下就是一個最簡單的例子，最前端的 http-gateway (nginx) 對外公開端口 8080 ，它根據 virtual host，去分派對應的請求去 dmzhttp (bretfisher/httpenv) 及 managerhttp (bretfisher/httpenv) 。構架圖就是以下這樣。
+```
+                              ┌───────────┐  
+              ┌──────────────►│  dmzhttp  │  
+              │               └───────────┘  
+              │                              
+           ┌───────────────┐                 
+           │ http-gateway  │                 
+  ────────►│ (nginx:8080)  │                 
+           └──┬────────────┘                 
+              │                              
+              │              ┌─────────────┐ 
+              └─────────────►│ managerhttp │ 
+                             └─────────────┘ 
+```
+
+換成 docker stack ，就大概如下
 ```yaml
 services:
   http-gateway:
@@ -101,9 +117,6 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      # placement:
-      #   constraints:
-      #     - node.labels.zone==dmz
   managerhttp:
     image: bretfisher/httpenv
     deploy:
@@ -112,9 +125,81 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      # placement:
-      #   constraints:
-      #     - node.role==manager
+```
+
+docker stack有一個很好的功能，就是 service 名會自動成為同一段網絡中的 hostname 。即是http-gateway中，它可以經DNS，找到 dmzhttp 、 managerhttp，也就是它的 nginx 可以設定成如下的樣子。
+```conf
+# default.conf
+server {
+	listen       8080;
+	listen  [::]:8080;
+	server_name  managerhttp;
+	resolver 127.0.0.11 valid=30s;
+
+	location ^~ / {
+		set $upstream_manager managerhttp;
+		proxy_cache off;
+		proxy_pass http://$upstream_manager:8888$request_uri;
+	}
+}
+server {
+	listen       8080;
+	listen  [::]:8080;
+	server_name  dmzhttp;
+	resolver 127.0.0.11 valid=30s;
+
+	location ^~ / {
+		set $upstream_dmz dmzhttp;
+		proxy_cache off;
+		proxy_pass http://$upstream_dmz:8888$request_uri;
+	}
+}
+```
+上面的例子中，就是一般的 virtual host + nginx proxy 設定。特別要說明的是 resolver 那一行，它指向 docker DNS (127.0.0.11)， 而且還可以讓nginx在找不到上游時，不要馬上死亡。這樣 docker swarm 中各個 service 隨時加加減減，有保命的作用。
+
+最後我們的 http-gateway 就是 nginx image + default.conf 上述的 docker 就可以用以下方式打包。
+```
+# Dockerfile
+# docker image build -t http-gateway ./
+FROM nginx:latest
+COPY default.conf /etc/nginx/conf.d/default.conf
+```
+
+在安全性的角度，我們還有一些設配置上的設定，讓 dmzhttp 和 managerhttp 在不同的機器上發佈。(留意placement -> constraints 的設定)
+```yaml
+services:
+  http-gateway:
+    image: http-gateway
+    ports:
+      - 8080:8080
+    deploy:
+      replicas: 1
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  dmzhttp:
+    image: bretfisher/httpenv
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.zone==dmz
+  managerhttp:
+    image: bretfisher/httpenv
+    deploy:
+      replicas: 3
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role==manager
 ```
 
 seperate
