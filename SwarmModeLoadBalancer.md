@@ -165,8 +165,17 @@ FROM nginx:latest
 COPY default.conf /etc/nginx/conf.d/default.conf
 ```
 
-在安全性的角度，我們還有一些設配置上的設定，讓 dmzhttp 和 managerhttp 在不同的機器上發佈。(留意placement -> constraints 的設定)
-```yaml
+上面的 docker stack 和 nginx config，只要同步增加 service 及對應的 proxy pass，就可以o讓同一個端口，根據不同hostname做分流。當然，如果大家可以共用端口及 hostname 也可以，分流就改用 nginx location 來設定，不過這是更加偏向 nginx 的內容，日後有機會再介紹。本篇就先集中於 docker 相關的議題。
+
+在安全性的角度， docker 還有一些配置可以做，就是讓 dmzhttp 和 managerhttp 在不同的機器上發佈。假設我們的網絡分開兩段，一段是 manager 專用，一段是 dmz 專用。在建立 docker swarm 後，我們可以為不同的節點加入對應的標簽。
+
+```bash
+docker node update --label-add zone=manager YOUR_MANAGER_NODE
+docker node update --label-add zone=dmz YOUR_DMZ_NODE
+```
+
+然後我們通過修改 docker stakc 中的 placement -> constraints ，限制不同的 service 在不同的節點上運行。這樣，我們就可以達到簡單分離的效果（但 nginx networks 還是會互通被 hack ? 所以最好還是不要使用同一network作為媒介？ 經過public port會好一些嗎？ 雲原生的 proxy gateway 可能就做得到？）
+```diff
 services:
   http-gateway:
     image: http-gateway
@@ -186,9 +195,9 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      placement:
-        constraints:
-          - node.labels.zone==dmz
++     placement:
++       constraints:
++         - node.labels.zone==dmz
   managerhttp:
     image: bretfisher/httpenv
     deploy:
@@ -197,9 +206,9 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      placement:
-        constraints:
-          - node.role==manager
++     placement:
++       constraints:
++         - node.labels.zone==manager
 ```
 
 seperate
