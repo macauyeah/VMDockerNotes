@@ -76,9 +76,8 @@ iptables -I INPUT -p vrrp -j ACCEPT
 systemctl restart keepalived
 ```
 
-# draft
-## virtual host load balance
-前面的例子，我們已經成功設定 ingress Network，也加了 virtual ip 。如果大家的目標是單一 web 應用，應該就已經很足夠。但作為一個足夠節儉的老闆，怎會讓一個 Swarm 只跑一個 Web 應用？但問題來了，一個 docker swarm service 就已經佔用一個公開端口 (例如上述的8888，或是更常見的443)。怎麼可以做到多個 service 分享同一個端口？答案就是回到傳統的 Web Server 當中，使用它們的 virtual host 及 proxy 功能，以達到這一效果。我們就以 Nginx 為例，去建立一個守門口的網關。
+## proxy gateway load balance
+前面的例子，我們已經成功設定 ingress Network，也加了 virtual ip 。如果大家的目標是單一 web 應用，應該就已經很足夠。但作為一個足夠節儉的老闆，怎會讓一個 Swarm 只跑一個 Web 應用？但問題來了，一個 docker swarm service 就已經佔用一個公開端口 (例如上述的8888，或是更常見的443)。怎麼可以做到多個 service 分享同一個端口？答案就是回到傳統的 Web Server 當中，使用它們的 virtual host 及 proxy 功能，以達到這一效果。我們就以 Nginx 為例，去建立一個守門口的網關 (gateway) 。
 
 以下就是一個最簡單的例子，最前端的 http-gateway (nginx) 對外公開端口 8080 ，它根據 virtual host，去分派對應的請求去 dmzhttp (bretfisher/httpenv) 及 managerhttp (bretfisher/httpenv) 。構架圖就是以下這樣。
 ```
@@ -174,7 +173,7 @@ docker node update --label-add zone=manager YOUR_MANAGER_NODE
 docker node update --label-add zone=dmz YOUR_DMZ_NODE
 ```
 
-然後我們通過修改 docker stakc 中的 placement -> constraints ，限制不同的 service 在不同的節點上運行。這樣，我們就可以達到簡單分離的效果（但 nginx networks 還是會互通被 hack ? 所以最好還是不要使用同一network作為媒介？ 經過public port會好一些嗎？ 雲原生的 proxy gateway 可能就做得到？）
+然後我們通過修改 docker stakc 中的 placement -> constraints ，限制不同的 service 在不同的節點上運行。
 ```diff
 services:
   http-gateway:
@@ -210,6 +209,10 @@ services:
 +       constraints:
 +         - node.labels.zone==manager
 ```
+使用上面的例子，我們就可以達到簡單分離的效果。但大家緊記，這個分離效果始終是一個規則式功能，它與防火牆的隔離還是有本質上的區別。除了利用傳統的防火牆技術外，我們的docker swarm network，其實也可以做更多隔離，我們日後再慢慢加強這個例子。
+
+# draft
+add more db network to be more protection. but managerhttp, dmzhttp must be accessable from nginx network. cross access must occurs at the entrypoint
 
 seperate
 ```yaml
@@ -239,9 +242,9 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      # placement:
-      #   constraints:
-      #     - node.role==manager
+      placement:
+        constraints:
+          - node.labels.zone==manager
 networks:
   nginx_default:
     external: true
@@ -259,9 +262,9 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
-      # placement:
-      #   constraints:
-      #     - node.labels.zone==dmz
+      placement:
+        constraints:
+          - node.labels.zone==dmz
 networks:
   nginx_default:
     external: true
