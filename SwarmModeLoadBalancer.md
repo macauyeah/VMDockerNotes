@@ -269,3 +269,38 @@ networks:
   nginx_default:
     external: true
 ```
+
+host mode
+```yaml
+services:
+  dmzhttp:
+    image: nginx
+    ports:
+      - target: 80
+        published: 8888
+        mode: host
+    deploy:
+      mode: global
+      update_config:
+        delay: 1s
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.zone==dmz
+  managerhttp:
+    image: bretfisher/httpenv
+    ports:
+      - target: 8888
+        published: 8888
+        mode: host
+    deploy:
+      mode: global
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.zone==manager
+```
