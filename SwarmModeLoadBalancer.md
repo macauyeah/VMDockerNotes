@@ -211,12 +211,12 @@ services:
 ```
 使用上面的例子，我們就可以達到簡單分離的效果。但大家緊記，這個分離效果始終是一個規則式功能，它與防火牆的隔離還是有本質上的區別。除了利用傳統的防火牆技術外，我們的docker swarm network，其實也可以做更多隔離，我們日後再慢慢加強這個例子。
 
-# draft
-add more db network to be more protection. but managerhttp, dmzhttp must be accessable from nginx network. cross access must occurs at the entrypoint
+# 基於安全性的各種考量
+前面介紹了 ingress network ，亦介紹了 proxy gateway 。能做到的基本都做到了，再來就是考量安全性的問題。因為加了 proxy gateway ，前述的例子是所有 service ，都放在同一個 yaml 檔中。好處是，所有相關的東西存放在同一個檔中， gateway ，背後的 service 都一眼看到。但壞處就是有其中一個 service 更新，都要改那個 yaml 檔。更大的問題是， stack deploy 的指令，不單只更新其中一個 service ，就連其他 service 都會自動取得最新 image 而 redeploy 。
 
-seperate
+對於一個緊密的系統來講，同步更新可能不是大問題。但對於一些預定排程發佈的系統可不能這樣因為副作用而更新了。如果你也有這樣的分開管理需求，可以參考下面做法，把 gateway service 及 upstream service 放在不同的檔案中，然後經過 external network把所有 service 串連起來。
 ```yaml
-# nginx-stack.yaml
+# nginx-stack.yaml, docker stack deploy -c nginx-stack.yaml nginx
 services:
   http-gateway:
     image: http-gateway
@@ -270,7 +270,57 @@ networks:
     external: true
 ```
 
-host mode
+這樣，不同 service 的維護人員，就可以獨自控制自己的檔案。在第一次發佈時，確認 nginx-stack.yaml 先行發佈就可以了。對應的發佈指令是`docker stack deploy -c nginx-stack.yaml nginx`，它會自動産生一個 nginx_default （即 stack名字_default ）的網絡。之後其他service，就可以經networks的設定找到它了。
+
+```yaml
+services:
+  YOUR_SERVICE:
+    networks:
+      - nginx_default
+      - default
+
+networks:
+  nginx_default:
+    external: true
+```
+
+上述即使分離檔案，在安全性考量時還是有一個問題，就是 ingress network 的問題。試想一下，dmzhttp （Demilitarized Zone）原本被設定的原因，就是想限制某些訪問只能一些可以公開的服務。但因為經過 ingress network 之後，它們會在所有機器上開放這些 port。那就是，以下面的例子來講，若 dmzhttp 是公開的服務， intrahttp 是內部服務，即使用 intrahttp 使用不同的port 8889。但一經 swarm mode 預設的 ingress network ，在`node.labels.zone==dmz`的那些節點，還是可以訪問到 intrahttp 。
+
+```yaml
+services:
+  dmzhttp:
+    image: bretfisher/httpenv
+    ports:
+      - 8888:8888
+    deploy:
+      replicas: 2
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.zone==dmz
+  intrahttp:
+    image: bretfisher/httpenv
+    ports:
+      - 8889:8888
+    deploy:
+      replicas: 3
+      update_config:
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.zone==intra
+```
+
+我們前述介紹的 proxy gateway ，其實已經有一定程度可以解決這個問題。因為 proxy gateway 是根據 http 協定中的 host header 去做分流。在邊界網絡進來的「合法」訪問，道理上會好好地經引導到我們的 dmzhttp 。不過網路的邪惡可容小看， proxy gateway 也會有被騙的一日。有特定能力的攻擊者，只需找到目標域名，還是可以接觸到 intrahttp 。
+
+若要做進一步隔離，在這種情況下，我們可以在 dmz , intra 機器中各設定一套 swarm ，完全獨立，這是最安全的做法。但這樣做的管理成本就會變高，因為兩個網段都會有自己的 manager 節點，而且在 dmz 網段的 manager 節點也有被攻擊的可能。
+
+若我們回到單一 swarm 的方向，可以修改各個 service 中的 port 和 deploy 。利用 post mode 中的「host」，配合 deploy mode 中的「global」，完全跳開 ingress network。
 ```yaml
 services:
   dmzhttp:
@@ -288,7 +338,7 @@ services:
       placement:
         constraints:
           - node.labels.zone==dmz
-  managerhttp:
+  intrahttp:
     image: bretfisher/httpenv
     ports:
       - target: 8888
@@ -302,5 +352,7 @@ services:
         condition: on-failure
       placement:
         constraints:
-          - node.labels.zone==manager
+          - node.labels.zone==intra
 ```
+
+上面的例子中， dmzhttp 會在所有 dmz 的機器中，每個節點只運行一份服務，而且直接使用該機的 8888 port ，外面不會再有 ingress network 的 存在。同樣地，intrahttp 會在 intra 的所有節點，運行一份服務，佔用它們的8888 。這兩個服務，即使使用一個 port ，swarm 也不會說有任何問題。因為它們不會經 ingress network 搶佔其他人的 8888。
