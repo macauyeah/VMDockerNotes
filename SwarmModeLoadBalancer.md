@@ -355,4 +355,17 @@ services:
           - node.labels.zone==intra
 ```
 
-上面的例子中， dmzhttp 會在所有 dmz 的機器中，每個節點只運行一份服務，而且直接使用該機的 8888 port ，外面不會再有 ingress network 的 存在。同樣地，intrahttp 會在 intra 的所有節點，運行一份服務，佔用它們的8888 。這兩個服務，即使使用一個 port ，swarm 也不會說有任何問題。因為它們不會經 ingress network 搶佔其他人的 8888。
+上面的例子中， dmzhttp 會在所有 dmz 的機器中，每個節點只運行一份服務，而且直接使用該機的 8888 port ，外面不會再有 ingress network 的 存在。同樣地，intrahttp 會在 intra 的所有節點，運行一份服務，佔用它們的8888 。這兩個服務，即使使用一個 port ，swarm 也不會說有任何問題，因為它們不會經 ingress network 搶佔其他人的 8888。
+
+可能會有讀者問，如果 host mode 這麼安全，為什麼預設會是 ingress network，那我們就要先了理清 ingress network 與 host mode 有有什麼分別？假設我們只運行一個service，它佔用8888。
+
+
+| 功能           | ingress mode                                          | host mode                            |
+|--------------|-------------------------------------------------------|--------------------------------------|
+| replicas 數   | 同一個 service replicas 為任意數量，什至比節點的數目多                   | 因為有 port 限制，每個節點最多只能運行一份                         |
+| Virtual IP   | Virtual IP 任意在節點中跳轉也可以，因為 ingress 會自動找到對應的 service 所在的節點 | Virtual IP必需要與 service 所在節點綁定，其他節點訪問不到 |
+| load balance | 有                                                     | 沒有                                   |
+
+host mode 就像我們傳統在各自的節點上自行佈署自己的程序，各個節點只有一份。所以不會有自動 load balance 的效果，如果客戶端訪問固定的IP，就會得到是固定的接器接受請求。我們有需要，就要在前面加一個 Proxy Gateway (或 HA  proxy )。 Virtual IP 也一樣， host mode 下需要好好地自動跟著 service 的生命期，不過幸運的是， Docker 預設己經有自動重啟 service 功能，即前文中的 restart_policy ，它在 host mode 下也適用。如果大家有配合 deploy 中的 global mode ， Virtual IP 的並沒有實際變動。但如果沒有 global mode ，就要再想想辦法了。
+
+最後考慮 load balance 的問題，如果進入點的 service 的真的不太消耗資源，沒有 load balance 也是可以的 ，但若超負荷，就必需要自建 proxy gateway 。經過進入點後，若我有背後的 service 就沒有所謂的 ingress 和 host mode 選擇。
