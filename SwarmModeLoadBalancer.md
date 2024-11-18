@@ -284,7 +284,7 @@ networks:
     external: true
 ```
 
-上述即使分離檔案，在安全性考量時還是有一個問題，就是 ingress network 的問題。試想一下，dmzhttp （Demilitarized Zone）原本被設定的原因，就是想限制某些訪問只能一些可以公開的服務。但因為經過 ingress network 之後，它們會在所有機器上開放這些 port。那就是，以下面的例子來講，若 dmzhttp 是公開的服務， intrahttp 是內部服務，即使用 intrahttp 使用不同的port 8889。但一經 swarm mode 預設的 ingress network ，在`node.labels.zone==dmz`的那些節點，還是可以訪問到 intrahttp 。
+上述即使分離檔案，在安全性考量時還是有一個問題，就是 ingress network 的問題。試想一下，dmzhttp （Demilitarized Zone）原本被設定的原因，就是想限制外來的訪問請求，只能訪問公開的服務。但因為經過 ingress network 之後，它們會在所有機器上開放這些 port。那就是，以下面的例子來講，若 dmzhttp 是公開的服務， intrahttp 是內部服務，即使用 intrahttp 使用不同的port 8889。但一經 swarm mode 預設的 ingress network ，在`node.labels.zone==dmz`的那些節點，還是可以訪問到 intrahttp 。
 
 ```yaml
 services:
