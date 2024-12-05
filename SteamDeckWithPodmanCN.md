@@ -85,3 +85,49 @@ crun = [
   "/home/linuxbrew/.linuxbrew/bin/crun"
 ]
 ```
+
+# build in podman
+install podman-compose
+```bash
+python -m ensurepip --upgrade
+python -m pip install podman-compose
+```
+
+add PATH with `~/.local/bin/`
+```bash
+# edit .bash_profile, add following command
+export PATH=$PATH:~/.local/bin/
+
+# then reboot / source .bash_profile
+```
+
+
+# build in distrobox
+```bash
+xhost +si:localuser:$USER # enable x11 for desk user
+distrobox create --image ubuntu:24.04 --name ubuntu
+distrobox enter ubuntu
+
+# install gedit
+sudo apt-get update && sudo apt-get install gedit
+
+# install vscode inside distrobox ubuntu
+sudo apt-get install wget gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+rm -f packages.microsoft.gpg
+
+sudo apt install apt-transport-https
+sudo apt update
+sudo apt install code # or code-insiders
+
+# start vscode inside distrobox ubuntu
+code
+
+# delete distrobox ubuntu
+distrobox stop ubuntu
+distrobox rm ubuntu
+```
+
+snap will not works (firefox not works)
