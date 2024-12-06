@@ -1,5 +1,4 @@
 # Steam Deck With Podman
-
 眾所週知，Steam Deck預裝的是一台Linux主機。但它的系統比較特別，為了可以安全更新，所以系統最主要的部份都設定為唯讀(read only)。也就是，傳統你可以直接在Linux上經管理員權限安裝的軟件包，全部都會被擋，即使你把唯讀部份設為可讀寫(read / write)，在下次更新時，都會被一次過覆蓋掉。
 
 筆者作為一個負責任的機迷+開發者，怎樣可以白白讓一台Linux機只可以玩遊戲呢? (怎樣跟老婆交代呢?)
@@ -13,7 +12,65 @@ Podman跟Docker一樣，都是一些管理和運行Container的主程式。跟Do
 
 就筆者早期的踩雷經驗而言，用Podman跑起一兩個獨立固定Port的Container來說，都很夠用，也不會遇到奇怪的Bug。所以這次，亦用來作為Steam Deck運行整合式開發的Container。
 
-# 不平凡的安裝之路
+# Steam OS 3.5 後
+在Steam OS 3.5之後，已經有預安裝的 podman，筆者建議，就直接使用預安裝版本就好。如果一定要自行安裝，請參閱後述的 【Steam OS 3.5前，不平凡的安裝之路】。
+
+## build in podman
+Steam OS 3.5，雖然已經有預安裝 podman ，但在實際環境下，多安裝一個 podman-compose 可以更方便地一體化操作。 我們可以經 python 安裝。
+
+```bash
+# install podman-compose by python package manager pip
+python -m ensurepip --upgrade
+python -m pip install podman-compose
+```
+
+剛安裝 podman-compose ，會出現在自己的 home 目標的隱藏目錄。最後一步就是要加到自己的 PATH 環境變數裏面。我們如果源用 bash 設定，就直接修改 `~/.bash_profile` 。
+```bash
+# edit .bash_profile, add following command
+export PATH=$PATH:~/.local/bin/
+
+# then reboot / source .bash_profile
+```
+修改保存後，就重啟。之後 podman-compose 的指令就可以任意存取了。
+
+要補充一點，就是官方預安裝的 podman 還是缺少了一些 DNS 的元件，大家會看到 warning 提示。不過在筆者單個 container 的使用情境下，並不受影響。之後要在其上二次引用的 distrobox 也可以順利執行。
+
+## build in distrobox
+在 Steam OS 3.5 中，除了 podman 外，還有預裝 distrobox 。 distrobox 其實是基於 container 技術的擴展應用，它目標是讓用經過 container 就可以輕鬆使用到不同 linux 的發佈版本。例如我想在 Steam OS 中使用 Ubuntu ，經過 distrobox 就可以用到。道理上， distrobox 基於 container (podman) 操作的，所以它能做到的，其實自己手動經 podman 也是可以做到。但若果大家想使用跨 Linux 版本的 GUI 程式，筆者還是建議優先使用 distrobox 。因為 distrobox 預設已為不同版本的 Linux 的 Image (來源影像檔) 加入部份調整，在運行時亦有x11等互通，指令也較為簡單。
+
+以下做來例子，示範在 Steam OS 中就執行 Ubuntu 版本的 vscode。
+```bash
+xhost +si:localuser:$USER # enable x11 for desk user
+
+distrobox create --image ubuntu:24.04 --name ubuntu
+distrobox enter ubuntu
+
+# install vscode inside distrobox ubuntu
+sudo apt-get install wget gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+rm -f packages.microsoft.gpg
+
+sudo apt install apt-transport-https
+sudo apt update
+sudo apt install code # or code-insiders
+
+# start vscode inside distrobox ubuntu
+code
+
+# delete distrobox ubuntu
+distrobox stop ubuntu
+distrobox rm ubuntu
+```
+
+註: Distrobox 也不是萬能的，例如它的 Ubuntu 版本內沒有 snap ，所以不能執行 Ubuntu 版本的 Firefox。
+snap will not works (firefox not works)
+
+
+# Steam OS 3.5前，不平凡的安裝之路
+以下內容寫於2023年10月，當時版本為 Steam OS 3.4.x。 2023年11月之後 Steam OS 3.5.x , 3.6.x 推出後，筆者還有使用一段時間。直至2024年10月，才正式砍掉重練。以下安裝步聚，大家請留意是否有需要微調。
+
 ## install homebrew
 Steam OS 3，雖然可以使用更改read / write，再使用pacman來安裝podman。但因為Steam OS更新後，全部要重來，工作量和網路流量都不少，所以筆者改為使用homebrew來安裝podman。homebrew只需要首次安裝時使用管理員權限，之後就會在/home資料夾下留下可執行的程式，所以它不會被Steam OS更新所破壞。
 
@@ -86,48 +143,4 @@ crun = [
 ]
 ```
 
-# build in podman
-install podman-compose
-```bash
-python -m ensurepip --upgrade
-python -m pip install podman-compose
-```
 
-add PATH with `~/.local/bin/`
-```bash
-# edit .bash_profile, add following command
-export PATH=$PATH:~/.local/bin/
-
-# then reboot / source .bash_profile
-```
-
-
-# build in distrobox
-```bash
-xhost +si:localuser:$USER # enable x11 for desk user
-distrobox create --image ubuntu:24.04 --name ubuntu
-distrobox enter ubuntu
-
-# install gedit
-sudo apt-get update && sudo apt-get install gedit
-
-# install vscode inside distrobox ubuntu
-sudo apt-get install wget gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
-rm -f packages.microsoft.gpg
-
-sudo apt install apt-transport-https
-sudo apt update
-sudo apt install code # or code-insiders
-
-# start vscode inside distrobox ubuntu
-code
-
-# delete distrobox ubuntu
-distrobox stop ubuntu
-distrobox rm ubuntu
-```
-
-snap will not works (firefox not works)
