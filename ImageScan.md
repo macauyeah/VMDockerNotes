@@ -11,3 +11,4 @@ docker run -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/.cache/:/root/.
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/.cache/:/root/.cache/ aquasec/trivy:0.58.0 image nginx:1.27.3-alpine
 ```
 
+in podman, might be no socket, this might be the possible solution  https://github.com/aquasecurity/trivy/issues/3098
