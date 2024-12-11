@@ -43,8 +43,8 @@ nginx:1.27.3
 ```
 
 # Ref
-[Podman socket activation](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md)
-[Trivy: Support for rootless podman](https://github.com/aquasecurity/trivy/issues/3098)
+- [Podman socket activation](https://github.com/containers/podman/blob/main/docs/tutorials/socket_activation.md)
+- [Trivy: Support for rootless podman](https://github.com/aquasecurity/trivy/issues/3098)
 
 
 
