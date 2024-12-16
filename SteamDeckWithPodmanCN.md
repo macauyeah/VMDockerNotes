@@ -33,7 +33,15 @@ export PATH=$PATH:~/.local/bin/
 ```
 修改保存後，就重啟。之後 podman-compose 的指令就可以任意存取了。
 
-要補充一點，就是官方預安裝的 podman 還是缺少了一些 DNS 的元件，大家會看到 warning 提示。不過在筆者單個 container 的使用情境下，並不受影響。之後要在其上二次引用的 distrobox 也可以順利執行。
+要補充一點，就是官方預安裝的 podman 還是缺少了一些 DNS 的元件，大家會看到 warning 提示。`WARN[0002] aardvark-dns binary not found, container dns will not be enabled`。該問題筆者認為主要是 podman rootless 的網路模式有很多限制，有很多功能都不是預設可以使用，要麽自行安裝 plugin 。內部網路是正常的，但唯獨DNS沒法解釋，所以如果大家只做 ip 測試是沒有問題。但若然想要互聯網服務，就必需要自己進行DNS解釋。例如你可能要這樣
+
+```bash
+curl https://github.com --resolve 'github.com:443:140.82.116.4'
+```
+
+這個解法最麻煩的是要為每個 service 內部重新安裝網絡DNS，就有點像每個 service 的內部環境都要很熟悉才能解，所以這並不是一個十分有效的做法。
+
+我們還有另一種解法，就是 service 設定檔中將 network_mode 設為 host ，即是直接使用主機上的網絡。然後各個 service 之間都直接使用 localhost 溝通，它們之間的 port 也是互相看到的，而且連接互聯網時，DNS 也可以正常運作。但這個解法的缺點就同一個 port 不能有多個 service 使用，也就是不可能簡單地進入群集模式。不過我們現在主要用於開發環境，所以這並不會是很太大的問題。
 
 ## build in distrobox
 在 Steam OS 3.5 中，除了 podman 外，還有預裝 distrobox 。 distrobox 其實是基於 container 技術的擴展應用，它目標是讓用經過 container 就可以輕鬆使用到不同 linux 的發佈版本。例如我想在 Steam OS 中使用 Ubuntu ，經過 distrobox 就可以用到。道理上， distrobox 基於 container (podman) 操作的，所以它能做到的，其實自己手動經 podman 也是可以做到。但若果大家想使用跨 Linux 版本的 GUI 程式，筆者還是建議優先使用 distrobox 。因為 distrobox 預設已為不同版本的 Linux 的 Image (來源影像檔) 加入部份調整，在運行時亦有x11等互通，指令也較為簡單。
@@ -106,7 +114,7 @@ It seems after upgrading podman to 5.0.x, podman need a dependency "pasta". Eith
 
 ```bash
 curl https://passt.top/builds/latest/x86_64/pasta -o pasta
- 
+
 chmod u+x pasta
 # chmod a+x pasta, if pasta's owned by root. let it share exec permission for everyone.
 
