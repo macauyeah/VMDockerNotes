@@ -24,3 +24,9 @@
 - 經Docker Network把上面兩個Service連在一起。而且Web Service會對外開放Port，但資料庫就只會對內開放Port。
 
 而一般的docker run，需要自行把上述所有事情串連起來。需要學習的command多，也很難感受整體的架構。個人覺得，在testing / development 環境下，容易上手的入門方式應該是docker compose。它可以同時行起多個Service/Container，提供同一個內部Network，把串連的動作簡化。更重要的是，docker compose主要是靠yaml file來做設定。讓新用戶可以更容易地重現別人做的好設定。
+
+# Draft
+## 為何要做成Docker
+容易ioslation, 同機可以有不同的dependency，處理好 Persistent Storage 就 OK。
+容易scale up (by docker swarm or k8s)，必需要考慮 Share Storage，file permission / owner
+容易換機，考慮file permission問題
