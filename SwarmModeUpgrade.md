@@ -52,3 +52,29 @@ packer build template.pkr.hcl
 更新時，最保守的做法，是先加入新的manager，再除去舊有的manager。但這個做法下，manager的IP就不可避免地被改變。若然DNS或者防火牆沒有相應的自動化幫忙，先加入再替換就變得很痛苦了。
 
 而上述的測試，其實代表了我們可以先暫停或移除舊有的manager，更新完後再接回去，這樣部份IP就可以重用。我們只要維持多於原本半數的manager活著，然後逐一替換或升級原有的機器，也不會有問題。即使在升級途中，其他manager不幸地斷線，重啟後它們還是有條件自行修復。我們也不需要顧及更新順序，只需想好Virtual IP的分配策略就足夠，其餘就像是單機升級一樣。
+
+
+# 實戰升級流程
+假設我們有5個 node，都為manager，各個 docker 版本都為28.0.4 ，我們將要關掉node 5 (ubuntu 22)，並加入node 6 (ubuntu24)，更新流程如下
+1. 如果node5有vvip，login node 5，關掉vvip
+    - `systemctl stop keepalived`
+1. login node1, 把node5降為drain模式，變為worker，並從群集中刪除
+    - `docker node update --availability drain node5`
+    - `docker node demote node5`
+        - 若然node5不是直接關機、刪除，只想好好地離開群集，可以 login node5, 在node5上預先執行 `docker swarm leave`
+    - `docker node rm --force node5`
+        - 如果之前node5有好好地離開群集，而且狀態已經轉為down，那麼就不用"force"了，用最保守的刪除指令就可以 `docker node rm node5`
+1. login node1, 取得manager token
+    - `docker swarm join-token manager`
+1. node5關機，新增node6，使用相容的ip段，或者使用node5的ip
+1. login node6, 加入群集，設定vvip
+    - `docker swarm join --token xxxx XX_IP:XX_PORT`
+    - `systemctl stop keepalived`
+
+上述的操作，有一些可能的陷阱，筆者就剛好踩過，未來不知道會不會有官方保證
+
+- docker的版本需要相同，不同版本可能不能加入群集，例如
+    - docker 28.0.4 不能加到 docker 27.5.1。
+    - docker 27.2.x 不能加到 docker 27.5.1。
+- docker swarm，官方雖然宣稱支援不同版本共存，但這指的是已加入的node，在不解綁的情況下原機升級。
+- 在swarm已有多版本共存的情況下，有一個node選擇完全脫離，它想再加入，也是會失敗的。可能這不是docker自身的限制，而是底層library的相容性問題。筆者在實測不同版本時，就得到這樣的error。`docker credentials: cannot check peer: missing selected ALPN property`
