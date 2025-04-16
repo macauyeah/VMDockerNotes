@@ -14,7 +14,7 @@ Notes about all of my trails and errors in VM and docker.
 - Swarm mode 上線 3 | Rollback [中文](SwarmModeRollbackCN.md)
 - Swarm mode 上線 4 | IP 設定 [中文](SwarmModeCommandCN.md)
 - Swarm mode 上線 5 - load balancer | 負載平衡器 [中文](SwarmModeLoadBalancer.md)
-- Swarm mode 上線 6 - OS升級前的準備 [中文](SwarmModeUpgrade.md)
+- Swarm mode 上線 6 - Host OS 升級流程 [中文](SwarmModeUpgrade.md)
 - Schedule Job with Docker [中文](CronJobWithDockerCN.md)
 - Docker Variable control - [中文](DockerArgEnvCN.md)
 - 於 Docker 中運行 Oracle [中文](OracleCN.md)
