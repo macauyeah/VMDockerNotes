@@ -57,7 +57,7 @@ packer build template.pkr.hcl
 # 實戰升級流程
 假設我們有5個 node，都為manager，各個 docker 版本都為28.0.4 ，我們將要關掉node 5 (ubuntu 22)，並加入node 6 (ubuntu24)，更新流程如下
 1. 如果node5有vvip，login node 5，關掉vvip
-    - `systemctl stop keepalived`
+    - `systemctl stop keepalived && systemctl disable keepalived`
 1. login node1, 把node5降為drain模式，變為worker，並從群集中刪除
     - `docker node update --availability drain node5`
     - `docker node demote node5`
@@ -69,7 +69,8 @@ packer build template.pkr.hcl
 1. node5關機，新增node6，使用相容的ip段，或者使用node5的ip
 1. login node6, 加入群集，設定vvip
     - `docker swarm join --token xxxx XX_IP:XX_PORT`
-    - `systemctl stop keepalived`
+    - `apt-get update && apt-get install keepalived -y`
+    - `systemctl start keepalived`
 
 上述的操作，有一些可能的陷阱，筆者就剛好踩過，未來不知道會不會有官方保證
 
