@@ -1,4 +1,4 @@
-# Swarm mode 上線 5 - load balancer | 負載平衡器
+# Swarm mode 上線 6 - load balancer | 負載平衡器
 前面我們一直談 swarm 的設定，但對於真實的服務，我們還要考慮客戶端是如何連接我們的伺服器群集。通常網路服務，客戶端都會經過域名轉換成IP，然而通過IP連線服務。
 
 ## Ingress Network
@@ -44,9 +44,10 @@ apt-get update && apt-get install keepalived -y
 vrrp_instance VI_1 {
     # change interface according to machine status
     interface eth1
+    # one node is MASTER, other nodes are BACKUP
     state MASTER
-    # 101 for node1, 102 for node2
-    # you can start seq from other value, remind unqiue for each node is ok; 
+    # virtual_router_id 1-255
+    # all nodes in same group must be same value
     virtual_router_id 101
     # lower value will become master
     # ex, node1 priority 100, node2 priority 200, node3 priority 150.
@@ -54,10 +55,6 @@ vrrp_instance VI_1 {
     # if node 2 gone, node 3 will become master.
     priority 100
     advert_int 1
-    authentication {
-        auth_type PASS
-        auth_pass YOUR_RANDOM_PASSWORD
-    }
     virtual_ipaddress {
         172.22.1.5
     }
@@ -65,16 +62,8 @@ vrrp_instance VI_1 {
 ```
 
 上述需要特別注意的是
-- virtual_router_id : 每個節點應該都要不一樣，以作唯一標識。
+- virtual_router_id : 要一起share ip的節點都要有同一個值。
 - priority : 每個節點應該都要不一樣，最大的那個節點，就會優先使用 Virtual IP 。
-- auth_pass : 每個節點都相同，但大家在抄時，記得更改。
-
-還有的是開通 iptables ，讓各個節點可以經網絡廣播的方式互相看到對方。
-```bash
-iptables -I INPUT -d 224.0.0.0/8 -j ACCEPT
-iptables -I INPUT -p vrrp -j ACCEPT
-systemctl restart keepalived
-```
 
 ## proxy gateway load balance
 前面的例子，我們已經成功設定 ingress Network，也加了 virtual ip 。如果大家的目標是單一 web 應用，應該就已經很足夠。但作為一個足夠節儉的老闆，怎會讓一個 Swarm 只跑一個 Web 應用？但問題來了，一個 docker swarm service 就已經佔用一個公開端口 (例如上述的8888，或是更常見的443)。怎麼可以做到多個 service 分享同一個端口？答案就是回到傳統的 Web Server 當中，使用它們的 virtual host 及 proxy 功能，以達到這一效果。我們就以 Nginx 為例，去建立一個守門口的網關 (gateway) 。
