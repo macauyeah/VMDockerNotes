@@ -173,6 +173,8 @@ curl -v -k -H 'host:whoami.swarm.localhost' https://127.0.0.1/
 
 本個例子與官方例子最大的不同，是官方的cert, tls, 是直接使用bind mount的方式存取，如果你有多過一個manager，這個方式不太有效。本文就用了swarm config及swarm secret，方便多個manager自動配置。不過swarm config及swarm secret都有個缺點，若要更新它們的內容，就必需要重命名（例如dynamic-tls.yaml=> dynamic-tls.yaml2） ，否則swarm不允許發佈。
 
+完整 yaml 請見 [github](https://github.com/macauyeah/ubuntuPackerImage/tree/main/traefik)
+
 # Reference:
 - https://github.com/bluepuma77/traefik-best-practice/blob/main/docker-swarm-traefik/docker-compose.yml
 - https://doc.traefik.io/traefik/routing/routers/#path-pathprefix-and-pathregexp
