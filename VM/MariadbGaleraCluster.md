@@ -134,3 +134,8 @@ ubuntu@pocdbnode2:~$ sudo systemctl start mariadb
 # node 3
 ubuntu@pocdbnode3:~$ sudo systemctl start mariadb
 ```
+
+# Reference
+- [Getting Started with MariaDB Galera Cluster](https://mariadb.com/docs/galera-cluster/galera-management/getting-started-with-mariadb-galera-cluster) 官方文件
+- [How to Set up MariaDB Galera Clusters on Ubuntu 22.04](https://www.linode.com/docs/guides/how-to-set-up-mariadb-galera-clusters-on-ubuntu-2204/)
+- [How to Bootstrap MySQL or MariaDB Galera Cluster – Updated](https://severalnines.com/blog/updated-how-bootstrap-mysql-or-mariadb-galera-cluster/) : 還有比較複雜的救機狀況，例如:safe_to_bootstrap全為0，即是可能是全部node都沒有好好地關掉，就掛了。大家有需要可以看看這個link的解決
