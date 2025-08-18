@@ -103,3 +103,34 @@ mysql -u root -p
 最後node1, node3都需要使用新的password才能登入。
 
 當一切都如預期，你的Mariadb Galera cluster就成功了。
+
+# 冷開機 cold start
+平常， Cluster 中只有其中一個 node 需要更新重啟，基本上所有節點回覆正常後，都可以互相通訊。而有些情況，例如斷電問題，需要所有節點全數關機，那麼 Galera cluster 就需要一定的方式重啟系統。那是一些狀態的保護機制，因為在全關機後再同步，系統不知道哪台機才有最新的狀態，它也不敢貿然同步(因為正常使用下， Galera cluster 只有兩台機也會開步)。所以需要人手介入，指定以某台機作為 cluster 的起始點。
+
+舉個最簡單的例子，前述三台機 pocdbnode3 ， pocdbnode2 ， pocdbnode1 順序關閉，那麼 pocdbnode1 應該就會有最新的資訊。 在ubuntu中，可以查看 `/var/lib/mysql/grastate.dat` 中的 `safe_to_bootstrap:`是否為1。如果是1，代表當初它有最後的 transaction ，以它為起始點重新起 cluster。
+
+```bash
+ubuntu@pocdbnode1:~$ sudo cat /var/lib/mysql/grastate.dat
+# GALERA saved state
+version: 2.1
+uuid:    0c38b6dd-7bdb-11f0-a4dd-1f4be36a6ea9
+seqno:   -1
+safe_to_bootstrap: 1
+```
+
+我們使用`galera_recovery`, `galera_new_cluster`, 就可以把該機器重新救起mariadb process。
+```bash
+ubuntu@pocdbnode1:~$ sudo galera_recovery
+WSREP: Recovered position 0c38b6dd-7bdb-11f0-a4dd-1f4be36a6ea9:11
+--wsrep_start_position=0c38b6dd-7bdb-11f0-a4dd-1f4be36a6ea9:11
+
+ubuntu@pocdbnode1:~$ sudo galera_new_cluster
+```
+
+然後其餘兩個 node 可以直接重啟 mariadb 服務
+```bash
+# node 2
+ubuntu@pocdbnode2:~$ sudo systemctl start mariadb
+# node 3
+ubuntu@pocdbnode3:~$ sudo systemctl start mariadb
+```
