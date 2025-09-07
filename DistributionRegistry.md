@@ -29,9 +29,56 @@
 
 
 # draft
-
 [Offical Doc](https://distribution.github.io/distribution)
+如果 server 群沒有互聯網，又或對私隱很有要求，需要自建一個最簡單的 registry ，可以用這個。當然，那台機第一次必需經互聯網。架起後，可以斷網，並由其他 client 提送新的 registry image更新。
 
+最簡單的起動方式，但什麼都不設定。
+```bash
+docker run -d -p 5000:5000 --name registry registry:3
+```
+
+若想要加入 SSL，讓你的 client 不會認為它是不安全的 registry ，最簡易可以寫成 docker compose, 由 `docker compose up -d` 執行。
+```yml
+# docker-compose.yml
+registry:
+  restart: always
+  image: registry:3
+  ports:
+    - 5000:5000
+  environment:
+    REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
+    REGISTRY_HTTP_TLS_KEY: /certs/domain.key
+  volumes:
+    - /path/data:/var/lib/registry
+    - /path/certs:/certs
+```
+
+上述的 environment 中，有條件的話，還請設定需要登入才能訪問限制。最簡單，可以使用 apache http header 驗證方式。
+```diff
+# docker-compose.yml
+registry:
+  restart: always
+  image: registry:3
+  ports:
+    - 5000:5000
+  environment:
+    REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
+    REGISTRY_HTTP_TLS_KEY: /certs/domain.key
++   REGISTRY_AUTH: htpasswd
++   REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
++   REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+  volumes:
+    - /path/data:/var/lib/registry
+    - /path/certs:/certs
++   - /path/auth:/auth
+```
+
+`REGISTRY_AUTH`, `REGISTRY_AUTH_HTPASSWD_PATH`, `REGISTRY_AUTH_HTPASSWD_REALM` 的值照抄就好，然後`/path/auth/htpasswd` 就需要以 htpasswd 的格式提供內容 [apache password_encryptions](https://httpd.apache.org/docs/2.4/misc/password_encryptions.html)。即是以下那個樣子
+```
+USERNAME_1:BCRYPT_HASH_1
+USERNAME_2:BCRYPT_HASH_2
+USERNAME_3:BCRYPT_HASH_3
+```
 
 # Garbage collection on registry
 
