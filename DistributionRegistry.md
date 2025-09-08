@@ -119,7 +119,7 @@ registry:
     - /path/data:/var/lib/registry
     - /path/certs:/certs
     - /path/auth:/auth
-+   - /path/config.yml:/etc/docker/registry/config.yml
++   - /path/config.yml:/etc/distribution/config.yml
 ```
 
 config.yml 就如下所示，為了提供 API 刪除 image 的可能，`storage.delete.enbled` 要為 `true`，又為著之後進行回收時，可以避免有人於回收中途上載，所以預先加入 `storage.maintenance.readonly.enabled` 的控制項。回收之前要把readonly改為true，回收後再調為false。 每次修改完，記得重啟一下 docker service 。
