@@ -1,6 +1,5 @@
-# Distribution Registry
-
-
+# Distribution Registry 的設置與維護
+在這篇文章中，我們將會聊一聊如何設置 Docker 私有影像倉庫，包括標籤命名、SSL 配置及垃圾回收等操作，以確保 Docker Image 的有效管理。
 
 # Docker Tag 命名
 一般來講，同一個docker image會提供多個不同的版本，每個版本會附予不同的tag，以作標識。但以docker image的維護者來講，它的tag通常代表的是自己程式的版本號。不過這個版本號卻存在很多變數，就讓筆者好好地逐一說明。
@@ -28,8 +27,9 @@
 每日自動更新beta，只有所有測試都通過時，才把archive指向現在的latest，再把latest指向現在的beta。這樣做的好處是，核心的docker stack檔案改變的機會較少，也可以免除docker swarm做太細緻的權限管理。
 
 # Private Registry 私有影像倉庫
-[Offical Doc](https://distribution.github.io/distribution)
-如果 server 群沒有互聯網，又或對私隱很有要求，需要自建一個最簡單的 registry ，可以用這個。當然，那台機第一次必需經互聯網。架起後就可以斷網，並由其他 client 提送新的 registry image更新。
+[Distribution](https://distribution.github.io/distribution) ，原本是由 docker 自己發行的私有影像倉庫 ，原名就為 “regsitry”。
+
+如果 server 群沒有互聯網，又或對私隱很有要求，需要自建一個最簡單的倉庫，可以用這個。當然，那台機第一次必需經互聯網。架起後就可以斷網，並由其他 client 提送新的 registry image更新。
 
 ## Registry Server 起動方式
 最簡單的起動方式，但什麼都不設定。
