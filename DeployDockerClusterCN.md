@@ -1,19 +1,15 @@
-# Docker In Production
+# Docker 上戰場 - Docker Swarm
 
-大部份在大公司工作的朋友，在公開的應用情景中，應該都會直接選擇Public Cloud(公有雲)的Kubernetes作為Production(投產環境)。但對於澳門的中、小微企，要找一個附合個人資料保護法的Public Cloud，可真難。想要簡單地靠自己架設本地Kubernetes，也不是一件易事。退而求其次，想要快速擁有一個Cluster(群集)，Docker是一個最直觀的選擇。
+大部份在大公司工作的朋友，在公開的應用情景中，應該都會直接選擇公有雲 (Public Cloud) 的 Kubernetes 作為 投產環境 (Production)。但對於澳門的中、小微企，要找一個附合個人資料保護法的公有雲，可真難。想要簡單地靠自己架設本地 Kubernetes ，也不是一件易事。退而求其次，想要快速擁有一個群集 (Cluster) ，Docker Swarm 是一個最直觀的選擇。
 
-之前筆者都介紹過Swarm mode的一些指令，但指令只是執行的手法，怎樣管理你的App還是有不同的選擇。
-
-## 把App轉成Swarm mode 還是把底層程式變成Swarm mode?
-
-雖然筆者對於Docker Swarm Mode的資歷尚淺，但由於後期更動的難點越來越多，筆者很想早一點討論其中不同操作的差異
+在介紹 Swarm mode 的之前，我們先聊一聊可以有哪些選擇，也就是怎樣管理你的App還是有不同的選擇。雖然筆者對於 Docker Swarm Mode 的資歷尚淺，但由於後期更動的難點越來越多，筆者很想早一點討論其中不同操作的差異。
 
 ## Docker Swarm
-Docker Swarm Mode其實是Docker提供的一個Cluster(群集)環境。在其中運行的Image，都可以比較方便地隨時分身到不同的node(節點)上，對於提高負載或可用性，都是一個不錯的解決。
+Docker Swarm Mode其實是 Docker 提供的一個群集 (Cluster)環境。在其中運行的 Docker Image，都可以比較方便地隨時分身到不同的node(節點)上，對於提高負載或可用性，都是一個不錯的解決。
 
-只要該Image跑起的Container是Stateless(前後兩次執行的結果互不相干涉)，或者是把Stateful的部份(有干涉的部份)外包到第三方(例如儲存空間使用NFS，或記憶體暫存改為Key-Value Database)，就可以方便地運作在Docker Swarm mode上。
+只要該 Image 跑起的Container是 無狀態的 - Stateless(前後兩次執行的結果互不相干涉)，或者是把狀能儲存 - Stateful的部份(有干涉的部份)外包到第三方(例如儲存空間使用NFS，或記憶體暫存改為Key-Value Database)，就可以方便地運作在Docker Swarm mode上。
 
-## 部署Docker Swarm的選項
+## 部署Docker Swarm的選項： 把App轉成Swarm mode 還是把底層程式變成Swarm mode?
 Docker Swarm可以把Image變成分身Container，但並沒有硬性改變傳統App操作方式。大部份App在執行時，都需要另一個底層程式的支緩。例如
 - Php Web App，需要底層php fpm + nginx或apache
 - Java Web App，就需要java + Tomcat
@@ -29,7 +25,7 @@ Docker Swarm可以把Image變成分身Container，但並沒有硬性改變傳統
 
 | 事項              | 打包App成為Image | 打包底層程式成為Image |
 | :---------------- | :------  | :------ |
-| 打包複雜度 | 需要把App用到的一些環境變數引入設定Image的entrypoint中，方便配合不同的環境可以改變App的行為。<br>打包次數根據App數量有關。<br>比較靈活，但比較需要學習和試錯。</li> | 底層程式統一設定環境變數，其中所有App都會使用類似或相同的設定，設定方式跟傳統方式無異。<br>打包次數根據底層程式數量有關。<br>比較死版，但要試錯的成本較低 |
+| 打包複雜度 | 需要把App用到的一些環境變數引入設定Image的 `entrypoint` 中，方便配合不同的環境可以改變App的行為。<br>打包次數根據App數量有關。<br>比較靈活，但比較需要學習和試錯。</li> | 底層程式統一設定環境變數，其中所有App都會使用類似或相同的設定，設定方式跟傳統方式無異。<br>打包次數根據底層程式數量有關。<br>一般有官方發佈的版本。<br>比較死版，但要試錯的成本較低 |
 | 發佈流程 | 打包App成Image。再靠Docker Swarm設定Image有多少分身。多個Image的協調，靠著Swarm完成。 | 原來的底層程式已存在於Docker Swarm中，只需把新建或更新了的App放入不同分身的儲存空間，讓底層程式動態跑起App。但若底層程式也要需要因應App數量而改變，有機會底層程式也需要重新打包。|
 | 管理複雜度 | 每個App都是獨立的，代表有任何更新也是獨立更新。<br>在微服務的協作環境中，需要管理員從Image層面為每個App設定網絡(network)或開放端口(Port)。但每個App可以設定不同的分身數量，靈活性一定比只打包底層程式要高。 | 使用同一個底層程式Image的App都會使用同一個網路和端口設定。<br>在微服務的協作環境中，管理員要應付的設定數量一定比打包App要少。<br>但由於是Conatiner分身是針對底層程式，所以若然某個App有不同需求，就要重新設定另一套底層程式。 |
 | 資源消耗 | 每個App獨立，代表資料消耗也是獨立的。總消耗就是倍數增長。但可以經Docker限定每個Image的使用量 | 因為底層程式共用，多少有可以省略的地方。資源限制沿用底層程式的傳統邏輯。 |
@@ -130,3 +126,5 @@ docker-deploy:
 CI是編譯 binary/docker image 的運程，CD是發佈的過程。編譯與發佈，並不一定對等實現。多次編譯，可以最後才會發佈一次。發佈也有分不同環境，發佈到測試場，還是投産？測試場與投産的也會存在版本差異，通常新一個版本還在測試，投産則用前一個版本。
 
 如果有清楚的版本號，CI會産生一個帶版本號的binary或image，CD則選擇不同的版本號配不同的config。如果要更準確地rollback ，CD還要有自己的版本號。為了靈活CD，減少CI的次數。
+
+目前script base可以 default branch event - build image (CI)， tag event deploy (（)CD)。 build image 時留一個有 commit hash 的docker tag ，之後 git tag 就根據當時的 commit hash 找回原本的image / binary，進行 docker stack deploy 的指令。這樣可以減少tag時需要執行的build 指令。不過CD如何以，就要以另一個repo儲起不同env的config。同一個repo儲config，也會出現改config後要重build的情況。

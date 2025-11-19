@@ -1,14 +1,46 @@
 # Swarm mode 上線
 之前一直都討論Image 的打包形式，現在聊聊部署上線時的一些指令。
 
+## 組成群集
+以前各家不同的軟件，想要起一個群集，要左攪右攪，又要重啟。而`docker swarm`真的很簡單，只要各機中有 docker ，再在各機中順序打指令就好。
+
+node 1 使用`docker swarm init` `docker swarm join-token manager`
+```bash
+# node 1
+> docker swarm init
+> docker swarm join-token manager
+To add a manager to this swarm, run the following command:
+
+    docker swarm join --token SWMTKN-1-xxxxxxxxxxxxxxxxxxxxxxx xxx.xxx.xxx.xxx:2377
+
+```
+
+其餘的管理員節點就根據上述的提示，使用 `docker swarm join --token SWMTKN-1-xxxxxxxxxxxxxxxxxxxxxxx xxx.xxx.xxx.xxx:2377` 就好。只要總數的管理員節點有奇數個就可以了（包括當初的node 1）。即是1、3、5等都可以。這是因為在容錯的情況下，必需由管理節點作出多數決，才能容易地知道判斷是哪些節點出現問題。
+
+如果不為容錯，只想增加可工作的機器，那麼我們只需要增加工作節點。我們可以在任何管理員節點生成`docker swarm join-token worker`
+
+```bash
+> docker swarm join-token worker 
+To add a worker to this swarm, run the following command:
+
+    docker swarm join --token SWMTKN-1-yyyyyyyyyyyyyyyyyyyyyyy yyy.yyy.yyy.yyy:2377 
+```
+
+若想要檢查各個節點的工作狀態，在管理員節點上執行 `docker node ls` 看到了。
+```bash
+docker node ls
+ID                            HOSTNAME      STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+xxxxxxxxxxxxxxxxxxxxxxxxx *   node1hostname   Ready     Active         Leader           28.5.1
+yyyyyyyyyyyyyyyyyyyyyyyyy *   node2hostname   Ready     Active         Reachable        28.5.1
+```
+
 ## Docker Service
 swarm mode 主要通過"docker service" 指令去產生一堆可以在不同節點上運行的container。為了更加形象地講，我把container稱為Image的分身。
 
-```docker service create```跟```docker container run```的感覺很像，兩者都可以指定image 
+`docker service create` 跟 `docker container run` 的感覺很像，兩者都可以指定image 
 
 ```bash
 # swarm mode
-$ docker swarm init
 $ docker service create --name nginx_s nginx
 
 # container mode
@@ -74,14 +106,14 @@ $ docker network connect --alias gateway nginx_c_gateway nginx_c5
 
 不過比較大的差異是service會停了原有的分身，重開新的分身去加入網段。所以上面的docker service ps nginx_s執行結果，就有一半是停掉的。
 
-類似地，docker service也不能單獨地停掉分身，頂多只能調整```--replicas=NUMBER```，來控制分身數量。而單機則可以經過```docker container stop```來暫停分身。
+類似地，docker service也不能單獨地停掉分身，頂多只能調整 `--replicas=NUMBER` ，來控制分身數量。而單機則可以經過 `docker container stop` 來暫停分身。
 
 ## Docker Stack
 同樣地，在單機管理container時，可以通過內建的docker compose指令配搭docker-compose.yaml檔案，管理多個有協作關係的container。Swarm mode也可以通過docker stack去管理yaml檔案中的多個有協作關係的service。
 
 因為docker compose已支援v3及Compose Specification標準；但docker stack暫時只能支援到v3格式，所以說yaml檔案不能完全照搬。但指令上行為是差不多的。
 
-```
+```bash
 docker stack deploy -c setting.yaml stack-name
 docker stack rm stack-name
 
@@ -89,7 +121,7 @@ docker compose -f setting.yaml up -d
 docker compose down
 ```
 
-docker stack也跟docker service類似，沒有隨時叫停的功能，而docker compose 就可以暫時叫停分身```docker compose -f setting.yaml stop```。
+docker stack也跟docker service類似，沒有隨時叫停的功能，而docker compose 就可以暫時叫停分身`docker compose -f setting.yaml stop`。
 
 ### Docker Stack yaml
 以下就是一個可以重複文章前述 nginx service 的 yaml 檔範例，它跟原本的 compose 的格式差不多，但多了 deploy 的分支。以 yaml 的方式來編寫，可以更直觀地看出部署的更新設定，例如滾動更新，主機限制等。
