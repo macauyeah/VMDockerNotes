@@ -12,6 +12,15 @@ Podman跟Docker一樣，都是一些管理和運行Container的主程式。跟Do
 
 就筆者早期的踩雷經驗而言，用Podman跑起一兩個獨立固定Port的Container來說，都很夠用，也不會遇到奇怪的Bug。所以這次，亦用來作為Steam Deck運行整合式開發的Container。
 
+# Steam OS 3.7 後
+Steam OS 3.7, seems cannot upgrade pip and install extra compose systemwize, need to use venv to install local podman-compose for each foldert
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install podman-compose
+```
+
 # Steam OS 3.5 後
 在Steam OS 3.5之後，已經有預安裝的 podman，筆者建議，就直接使用預安裝版本就好。如果一定要自行安裝，請參閱後述的 【Steam OS 3.5前，不平凡的安裝之路】。
 
